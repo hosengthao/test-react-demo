@@ -1,7 +1,7 @@
-import {Row, Col, Form, Button} from 'react-bootstrap';
+import {Row, Col, Form, Button, Alert} from 'react-bootstrap';
 import {useState} from 'react';
 
-function Login({handleLoginRequest}) {
+function Login({handleLoginRequest, handleCreateUser, loginPending, loginFailure}) {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
 
@@ -9,6 +9,12 @@ function Login({handleLoginRequest}) {
         event.preventDefault()
         console.log({username, password})
         handleLoginRequest(username, password)
+    }
+
+    function handleCreate (event) {
+        event.preventDefault()
+        console.log({username, password})
+        handleCreateUser(username, password)
     }
 
     function onUsernameChange(event) {
@@ -33,10 +39,14 @@ function Login({handleLoginRequest}) {
                             <Form.Label>Password</Form.Label>
                             <Form.Control type="password" placeholder="Password" onChange={onPasswordChange}/>
                         </Form.Group>
-                        <Button variant="primary" type="submit">Submit</Button>
+                        <Button variant="primary" type="submit" disabled={loginPending}>
+                            {loginPending ? 'Logging in' : 'Submit'}
+                        </Button>
+                        <Button variant="success" type="button" onClick={handleCreate}>Register</Button>
                     </Form>
                 </Col>
             </Row>
+            {loginFailure && <Row className='mt-3'><Col><Alert variant='danger'>Invalid Login</Alert></Col></Row>}
         </>
     );
 }

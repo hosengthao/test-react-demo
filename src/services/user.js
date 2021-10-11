@@ -9,3 +9,13 @@ export function requestLogin(credentials) {
         body: JSON.stringify(credentials)
     })
 }
+
+export function requestCreate(credentials) {
+    return fetch(base_url + 'user/create', {
+        method: 'POST',
+        headers: {
+            'Content-type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
+    })
+}

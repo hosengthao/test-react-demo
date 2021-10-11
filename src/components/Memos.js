@@ -1,13 +1,35 @@
-import {Button, Row, Col, Card, Modal, Form, Badge, CloseButton} from 'react-bootstrap';
-import {useState} from "react";
+import {Button, Row, Col, Card, Modal, Form, Badge, CloseButton, Toast, ToastContainer, Spinner} from 'react-bootstrap';
+import {useEffect, useState} from "react";
+import LoadingMemo from "./LoadingMemo";
 
 
-function Memos({logout, handleCreateMemo, memos, handleDeleteMemo}) {
+function Memos({
+                   logout,
+                   handleCreateMemo,
+                   memos,
+                   handleDeleteMemo,
+                   getMemosPending,
+                   getMemosFailure,
+                   createMemoPending,
+                   createMemoFailure,
+                   deleteMemoFailure,
+                   deleteMemoPending}) {
+
     const [show, setShow] = useState(false);
     const [content, setMemoText] = useState('');
     const [memoTags, setTags] = useState('');
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
+    const [showError, setShowError] = useState(false);
+    const [showCreateMemoError, setShowCreateMemoError] = useState(createMemoFailure);
+    const [showDeleteMemoError, setShowDeleteMemoError] = useState(deleteMemoFailure);
+
+
+    useEffect(()=> {
+        if(getMemosFailure) {
+            setShowError(true)
+        }
+    }, [getMemosFailure])
 
     function handleSubmit(event) {
         event.preventDefault()
@@ -16,6 +38,18 @@ function Memos({logout, handleCreateMemo, memos, handleDeleteMemo}) {
         handleCreateMemo({content, tags})
         handleClose()
     }
+
+    useEffect(()=> {
+        if(createMemoFailure) {
+            setShowError(true)
+        }
+    }, [createMemoFailure])
+
+    useEffect(()=> {
+        if(deleteMemoFailure) {
+            setShowError(true)
+        }
+    }, [deleteMemoFailure])
 
     function handleTextChange(event) {
         setMemoText(event.target.value)
@@ -63,32 +97,47 @@ function Memos({logout, handleCreateMemo, memos, handleDeleteMemo}) {
                 </Col>
             </Row>
             <Row>
-                {
+                {memos || !getMemosPending ?
                     memos.map(memo => {
                         return (
-                            <Card style={{width: '18rem'}}>
-                                <Card.Body>
+                            <Card style={{width: '18rem'}} bg=''>
+                                <Card.Body key={memo.id}>
                                     <Card.Title>
-                                        <strong>{memo.create_timestamp.slice(0,10)}</strong><CloseButton className='float-sm-end' onClick={() => handleDeleteMemo(memo)}/>
+                                        <strong>{new Date(memo.create_timestamp).toString().slice(0, 16)}
+                                        </strong>
+                                        <CloseButton className='float-sm-end' onClick={() => {handleDeleteMemo(memo)}}/>
                                     </Card.Title>
                                     <Card.Subtitle className='text-center'>
-                                        {memo.content}
+                                        {new Date(memo.create_timestamp).toString().slice(16, 21)}<br/>{memo.content}
                                     </Card.Subtitle>
                                 </Card.Body>
                                 <Card.Footer>
                                     {memo.tag ? memo.tag.map(tag => {
-                                        return (
-                                            <Badge bg='secondary'>{tag}</Badge>
-                                        )
-                                    }) :
+                                            return (
+                                                <Badge bg='secondary'>{tag}</Badge>
+                                            )
+                                        }) :
                                         console.log('no tags')
                                     }
                                 </Card.Footer>
                             </Card>
                         )
-                    })
+                    }) :
+                    <h2>Loading...</h2>
                 }
             </Row>
+            <ToastContainer className="p-3" position='bottom-end'>
+                <Toast bg='danger' onClose={() => setShowError(false)} show={showError} delay={3000} autohide>
+                    <Toast.Body className={'text.white'}>Error retrieving memos</Toast.Body>
+                </Toast>
+                <Toast bg='danger' onClose={() => setShowCreateMemoError(false)} show={showCreateMemoError} delay={3000} autohide>
+                    <Toast.Body className={'text.white'}>Error creating memo</Toast.Body>
+                </Toast>
+                <Toast bg='danger' onClose={() => setShowDeleteMemoError(false)} show={showDeleteMemoError} delay={3000} autohide>
+                    <Toast.Body className={'text.white'}>Error deleting memo</Toast.Body>
+                </Toast>
+            </ToastContainer>
+            {createMemoPending && <LoadingMemo/>}
         </>
     );
 }

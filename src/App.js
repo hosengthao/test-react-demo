@@ -1,63 +1,52 @@
 import Login from './components/Login.js';
 import {Container} from 'react-bootstrap';
 import Memos from './components/Memos.js'
-import {useState, useEffect} from "react";
-import {requestLogin} from './services/user.js'
-import {requestMemos, createMemo, deleteMemo} from "./services/memos.js";
+import {connect} from "react-redux";
+import {initiateLogin, logout} from "./modules/user";
+import {initiateCreateMemo, initiateDeleteMemo} from "./modules/memos";
 
-function App() {
-    const [token, setToken] = useState('')
-    const [memos, setMemos] = useState([])
+function App({
+                 dispatch,
+                 loginPending,
+                 loginFailure,
+                 token,
+                 getMemosPending,
+                 getMemosFailure,
+                 memos,
+                 createMemoPending,
+                 createMemoFailure,
+                deleteMemoPending,
+                deleteMemoFailure}) {
 
-    function handleError(error) {
-        console.log(error)
-    }
-
-    function handleRequestMemos() {
-        requestMemos(token).then(data => data.json(), handleError).then(json => {
-            console.log(json)
-            setMemos(json.memo_list)
-        }, handleError).catch(handleError)
-    }
-
-    useEffect(() => {if (token) {handleRequestMemos()}}, [token])
-
-    function handleLoginRequest(username, password) {
-        requestLogin({username, password}).then(data => data.json(), handleError).then(json => {
-            console.log(json);
-
-            if (json.token) {
-                setToken(json.token)
-            } else {
-                console.log('no token')
-            }
-        }, handleError).catch(handleError)
-    }
-
-    function handleLogoutRequest(username, password) {
-        setToken('')
-    }
-
-    async function handleCreateMemo(memo) {
-        await createMemo(token, memo).then(data => data.json(), handleError).then(json => {
-            console.log(json);
-        }, handleError).catch(handleError)
-        handleRequestMemos();
-    }
-
-    async function handleDeleteMemo(memo) {
-        await deleteMemo(token, memo).then(data => data.json(), handleError).catch(handleError)
-        handleRequestMemos();
-    }
 
     return (
         <Container>
             {
                 token ?
-                    <Memos logout={handleLogoutRequest} handleCreateMemo={handleCreateMemo} handleDeleteMemo={handleDeleteMemo} memos={memos}/> :
-                    <Login handleLoginRequest={handleLoginRequest}/>}
+                    <Memos
+                        logout={() => dispatch(logout())}
+                        handleCreateMemo={memo => dispatch(initiateCreateMemo(memo))}
+                        handleDeleteMemo={memo => dispatch(initiateDeleteMemo(memo))}
+                        memos={memos}
+                        getMemosPending={getMemosPending}
+                        getMemosFailure={getMemosFailure}
+                        createMemoPending={createMemoPending}
+                        createMemoFailure={createMemoFailure}
+                        deleteMemoPending={deleteMemoPending}
+                        deleteMemoFailure={deleteMemoFailure}
+                    /> :
+                    <Login
+                        handleLoginRequest={(username, password) => dispatch(initiateLogin({username,password}))}
+                        loginFailure={loginFailure}
+                        loginPending={loginPending}
+                    />
+            }
         </Container>
     );
 }
 
-export default App;
+function mapStateToProps(state) {
+    return {...state.user, ...state.memos}
+}
+
+export default connect(mapStateToProps)(App);

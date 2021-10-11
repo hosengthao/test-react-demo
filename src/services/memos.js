@@ -12,7 +12,6 @@ export function requestMemos(token) {
 }
 
 export function createMemo(token, memo) {
-    console.log(token);
     console.log(memo);
     return fetch(base_url + 'memo', {
         method: 'POST',
@@ -25,7 +24,6 @@ export function createMemo(token, memo) {
 }
 
 export function deleteMemo(token, memo) {
-    console.log(token);
     console.log(memo);
     return fetch(base_url + 'memo/' + memo.id, {
         method: 'DELETE',
